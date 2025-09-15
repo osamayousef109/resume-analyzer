@@ -1,2 +1,7 @@
 streamlit
 pdfplumber
+pandas
+sentence-transformers
+scikit-learn
+rapidfuzz
+torch
