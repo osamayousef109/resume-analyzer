@@ -4,35 +4,21 @@ import pdfplumber
 from io import BytesIO
 import textwrap
 
-st.set_page_config(page_title="Resume Analyzer (Skeleton)", layout="wide")
+st.set_page_config(page_title="Resume Analyzer (Fixed Form)", layout="wide")
 
-st.title("📄 Resume Analyzer — Skeleton")
-st.write("Upload one or more resume PDFs and paste a job description. This skeleton extracts text from PDFs and displays it for further processing.")
+st.title("📄 Resume Analyzer — Form + Expander Fix")
+st.write("Upload one or more resume PDFs and paste a job description. Use the Extract button in the form to parse PDFs.")
 
 # Sidebar instructions / options
 st.sidebar.header("Instructions")
 st.sidebar.write(
     textwrap.dedent(
         """
-        1. Upload PDF resumes (.pdf).
-        2. Paste the job description on the right.
-        3. Click 'Extract' to parse PDFs and preview extracted text.
-        Next: add skill extraction, embeddings, matching, visualizations.
+        1. Use the form to upload PDF resumes and paste the job description.
+        2. Click 'Extract' (the form submit button) to parse PDFs and preview extracted text.
+        3. Use expanders to view full resume text.
         """
     )
-)
-
-# ---- Upload resumes ----
-uploaded_files = st.file_uploader(
-    "Upload resume PDFs (you can upload multiple)", type=["pdf"], accept_multiple_files=True
-)
-
-# ---- Job description input ----
-st.subheader("Job Description")
-job_desc = st.text_area(
-    "Paste the job description here (or type a few bullet points):",
-    height=240,
-    placeholder="e.g. Seeking Python developer with experience in Django, REST APIs, SQL..."
 )
 
 # helper: extract text from a single PDF file-like object
@@ -50,63 +36,87 @@ def extract_text_from_pdf(file_like):
 
 # Cache extracted texts so reuploads / reruns are faster
 @st.cache_data(show_spinner=False)
-def parse_all_pdfs(file_list):
+def parse_all_pdfs(file_bytes_list):
     results = []
-    for f in file_list:
-        # streamlit file_uploader returns an UploadedFile with .read()
-        # convert to BytesIO so pdfplumber can reopen it later if cached
-        raw = f.read()
+    for name, raw in file_bytes_list:
         text = extract_text_from_pdf(BytesIO(raw))
-        results.append({"filename": f.name, "text": text})
+        results.append({"filename": name, "text": text})
     return results
 
-# ---- Extract button ----
-if st.button("Extract"):
+# -----------------------
+# Form: uploads + job desc
+# -----------------------
+with st.form("upload_form", clear_on_submit=False):
+    st.subheader("Upload resumes and job description")
+    uploaded_files = st.file_uploader(
+        "Upload resume PDFs (you can upload multiple)", type=["pdf"], accept_multiple_files=True
+    )
+    job_desc = st.text_area(
+        "Paste the job description here (or type a few bullet points):",
+        height=200,
+        placeholder="e.g. Seeking Python developer with experience in Django, REST APIs, SQL..."
+    )
+    submitted = st.form_submit_button("Extract")
+
+# When the form is submitted, parse and store results
+if submitted:
     if not uploaded_files:
-        st.warning("Please upload at least one PDF resume.")
+        st.warning("Please upload at least one PDF resume before clicking Extract.")
     else:
         with st.spinner("Extracting text from PDFs..."):
-            parsed = parse_all_pdfs(uploaded_files)
+            # read bytes for each file so we can cache by bytes
+            file_bytes_list = []
+            for f in uploaded_files:
+                raw = f.read()
+                file_bytes_list.append((f.name, raw))
+            parsed = parse_all_pdfs(file_bytes_list)
 
-        # layout: left column for resumes, right column for job description + actions
-        left_col, right_col = st.columns([2, 3])
-        with left_col:
-            st.subheader("Parsed Resumes")
-            for i, r in enumerate(parsed):
-                st.markdown(f"**{i+1}. {r['filename']}**")
-                if r["text"].startswith("[ERROR]"):
-                    st.error(r["text"])
-                else:
-                    # show first N characters and allow expand
-                    preview = r["text"][:2000] + ("..." if len(r["text"]) > 2000 else "")
-                    st.code(preview, language="text")
-                    st.write("")  # spacing
-                    if st.button(f"Show full text — {r['filename']}", key=f"full_{i}"):
-                        st.text_area(f"Full text — {r['filename']}", value=r["text"], height=400)
-
-        with right_col:
-            st.subheader("Job Description (Preview)")
-            if job_desc.strip() == "":
-                st.info("Paste a job description above to compare against the resumes.")
-            else:
-                st.write(job_desc)
-                st.markdown("---")
-                st.write("Next steps (examples):")
-                st.write(
-                    "- Extract skills from resumes and JD using keyword matching or NER.\n"
-                    "- Compute sentence embeddings for semantic matching (sentence-transformers).\n"
-                    "- Show a match score and list missing skills."
-                )
-
-        # store parsed results in session state for later steps
+        # store parsed results in session state
         st.session_state["parsed_resumes"] = parsed
+        st.session_state["job_desc"] = job_desc
 
-# If already parsed (from earlier run), show a smaller preview and an option to continue
-elif uploaded_files and "parsed_resumes" in st.session_state:
-    st.info("Resumes parsed in previous run. Click Extract to re-parse if you uploaded new files.")
-    parsed = st.session_state["parsed_resumes"]
-    for r in parsed:
-        st.markdown(f"**{r['filename']}** — {len(r['text'])} characters")
+# If parsed results already exist in session state, load them
+parsed = st.session_state.get("parsed_resumes", None)
+saved_job_desc = st.session_state.get("job_desc", "")
+
+# Layout for parsed results and job description
+left_col, right_col = st.columns([2, 3])
+with left_col:
+    st.subheader("Parsed Resumes")
+    if parsed:
+        for i, r in enumerate(parsed):
+            fname = r["filename"]
+            st.markdown(f"**{i+1}. {fname}**")
+            if r["text"].startswith("[ERROR]"):
+                st.error(r["text"])
+            else:
+                preview = r["text"][:2000] + ("..." if len(r["text"]) > 2000 else "")
+                st.code(preview, language="text")
+                st.write("")  # spacing
+                # Use expander to show full text reliably
+                with st.expander(f"Show full text — {fname}", expanded=False):
+                    st.text_area(f"Full text — {fname}", value=r["text"], height=400)
+    else:
+        st.info("No parsed resumes yet. Upload files and click Extract to parse them.")
+
+with right_col:
+    st.subheader("Job Description (Preview)")
+    if parsed:
+        # show job description from session state if available, otherwise from form
+        preview_jd = saved_job_desc if saved_job_desc else job_desc
+        if not preview_jd:
+            st.info("Paste a job description in the form (above) and click Extract.")
+        else:
+            st.write(preview_jd)
+            st.markdown("---")
+            st.write("Next steps (examples):")
+            st.write(
+                "- Extract skills from resumes and JD using keyword matching or NER.\n"
+                "- Compute sentence embeddings for semantic matching (sentence-transformers).\n"
+                "- Show a match score and list missing skills."
+            )
+    else:
+        st.info("After extracting resumes, the job description preview will appear here.")
 
 # Footer / dev notes
 st.markdown("---")

@@ -13,8 +13,8 @@ An NLP-powered dashboard built with Python and Streamlit that parses resumes, ma
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/YourUsername/YourRepoName.git](https://github.com/YourUsername/YourRepoName.git)
-    cd YourRepoName
+    git clone https://github.com/osamayousef109/resume-analyzer
+    cd resume-analyzer
     ```
 2.  **Install dependencies:**
     ```bash
