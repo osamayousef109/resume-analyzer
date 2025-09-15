@@ -1,6 +1,26 @@
-[
-  "python", "java", "c++", "sql", "javascript", "react", "django",
-  "flask", "pytorch", "tensorflow", "nlp", "machine learning",
-  "data structures", "algorithms", "git", "rest api", "docker", "kubernetes",
-  "aws", "mySQL", "postgresql", "html", "css"
+{
+"Programming Languages": \[
+"Python", "Java", "C", "C++", "C#", "JavaScript", "TypeScript", "Go", "Rust", "Ruby", "PHP", "Swift", "Kotlin", "R", "MATLAB", "Scala", "Perl", "Haskell", "Prolog"
+],
+"Frameworks & Libraries": \[
+"React", "Angular", "Vue.js", "Django", "Flask", "Spring", "Hibernate", "Express.js", "Next.js", "Nuxt.js", "TensorFlow", "PyTorch", "Keras", "Scikit-learn", "OpenCV", "Pandas", "NumPy", "Matplotlib", "Seaborn"
+],
+"Databases": \[
+"MySQL", "PostgreSQL", "SQLite", "MongoDB", "Redis", "Oracle", "Microsoft SQL Server", "Cassandra", "Elasticsearch", "Firebase"
+],
+"Cloud & DevOps": \[
+"AWS", "Azure", "Google Cloud", "Heroku", "Netlify", "Vercel", "DigitalOcean", "Docker", "Kubernetes", "Terraform", "Jenkins", "GitHub Actions", "Travis CI"
+],
+"Developer Tools": \[
+"Git", "Linux", "Bash", "PowerShell", "IntelliJ", "Eclipse", "Visual Studio", "VS Code", "PyCharm", "CLion", "Jira", "Confluence", "Figma"
+],
+"Data & Analytics": \[
+"Excel", "Tableau", "Power BI", "Looker", "Google Analytics", "BigQuery", "Hadoop", "Spark"
+],
+"Cybersecurity": \[
+"Penetration Testing", "Ethical Hacking", "Wireshark", "Metasploit", "Burp Suite", "OWASP", "SIEM", "IDS/IPS"
+],
+"Soft Skills": \[
+"Teamwork", "Leadership", "Problem Solving", "Communication", "Adaptability", "Creativity", "Critical Thinking", "Time Management"
 ]
+}
